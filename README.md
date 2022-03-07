@@ -7,10 +7,14 @@
   py -m venv venvname
   venvname/Scripts/activate
   ```
+If the system does not allow script execution, then you need to run Powershell as an administrator and run the command:
+  ```
+  Set-ExecutionPolicy RemoteSigned
+  ```
 
 3. Install the dependencies:
   ```
-  install -r requirements.txt
+  pip install -r requirements.txt
   ```
 
 5. Run the development server:
@@ -28,5 +32,8 @@ Password: admin
 You can register a new user from on the SignIn page. A new user is created with a basic level of access: view the list of users only.
 Admin can delete users, change access level, user password, user description on the User page.
 You cannot remove the admin and you cannot change the admin access level, but you can change the password.
+Access level:
+1 - admin
+2 - user
 
 Any user can log out of a session by clicking the SignOut button.
