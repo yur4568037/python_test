@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid">
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+              <li class="nav-item">
+                <div> </div>
+              </li>
+              <li class="nav-item">
+                
+              </li>
+              <li class="nav-item">
+              
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    <title>SignIn title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+    <main class="flex-shrink-0">
+        <div class="container">
+            <h1 class="mt-5">SignIn</h1>
+            <form action="/send_signin" id="form_signin" method="post">
+                {{ form1.csrf_token }}
+                {{ form1.username.label }} {{ form1.username() }}
+                {{ form1.password.label }} {{ form1.password() }}
+
+                <input type="submit" value="Sign in"/>
+            </form>
+            <div id="msg_sign"></div>
+
+            <h1 class="mt-5">Registration</h1>
+            <form action="/send_registration" id="form_reg" method="post">
+                {{ form2.csrf_token }}
+                {{ form2.username.label }} {{ form2.username() }}
+                {{ form2.password.label }} {{ form2.password() }}
+
+                <input type="submit" value="Register"/>
+            </form>
+            <div id="msg_reg"></div>
+
+            <script>
+                $(document).ready(function () {
+                    $("#form_signin" ).submit(function( event ) {
+                    sendAjaxForm("form_signin", "msg_sign");
+                    event.preventDefault();
+                    });
+                });
+
+                $(document).ready(function () {
+                    $("#form_reg" ).submit(function( event ) {
+                    sendAjaxForm("form_reg", "msg_reg");
+                    event.preventDefault();
+                    });
+                });
+
+                /* send form via ajax */
+                function sendAjaxForm(form_ajax, msg) {
+                    var form = $("#" + form_ajax);      // get form by id
+                    $.ajax({
+                        type: form.attr('method'),
+                        url: form.attr('action'),
+                        data: form.serialize(),
+                        success: function (response) {  // response from server
+                            var json = jQuery.parseJSON(response);
+                            $('#' + msg).html(json.msg);    // Output data to div with id=msg
+                            if (json.success == 'true') {
+                                form.trigger('reset');      // clear form
+                                window.location.href = "index";
+                            }
+                            else
+                            {
+                                //alert("Something went wrong");
+                                console.log("Error");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                        }
+                    });
+                }
+            </script>
+        </div>
+    </main>
+</body>
+</html>
+
+

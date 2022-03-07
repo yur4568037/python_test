@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}
+User page
+{% endblock %}
+
+{% block body %}
+<h1 class="mt-5">Users page</h1>
+
+{% if user_permission == 1 %}
+<h4>New user create:</h4>
+<form action="/send_newuser" id="form_newuser" method="post">
+    {{ formnewuser.csrf_token }}
+    {{ formnewuser.username.label }} {{ formnewuser.username() }}
+    {{ formnewuser.password.label }} {{ formnewuser.password() }}
+    {{ formnewuser.access.label }} {{ formnewuser.access() }}
+    {{ formnewuser.description.label }} {{ formnewuser.description() }}
+    <br>
+    <input type="submit" value="Create"/>
+</form>
+<div id="msg_newuser"></div>
+{% endif %}
+
+<h4>User list:</h4>
+<tr>
+    <td>ID</td>
+    <td>Username</td>
+    <td>Access</td>
+    {% if user_permission == 1 %}
+        <td>Userpass</td>
+    {% endif %}
+    <td>Description</td>
+</tr>
+
+{% for element in sql_users %}
+<form action="/user/{{ element.id }}/update"  method="post">
+    {% if user_permission == 1 %}
+    <div>
+        <tr>
+            <td>{{ element.id }}</td>
+            {% if element.username == "admin" %}
+            <td>{{ element.username }}</td>
+            <td>{{ element.access }}</td>
+            {% else %}
+            <td><input type="text" name="username" id="username" placeholder="Enter username" value={{ element.username }}></td>
+            <td><input type="text" name="access" id="access" placeholder="Enter access" min="1" max="2" pattern="[1-2]{1}" value={{ element.access }}></td>
+            {% endif %}
+            <td><input type="password" name="password" id="password" placeholder="Enter password"></td>
+            {% if element.username != "admin" %}
+            <textarea name="description" id="description" cols="100" rows="1"placeholder="Enter description">{{ element.description }}</textarea>
+            {% endif %}
+            <td><input type="submit" value="Update"></td>
+            {% if element.username != "admin" %}
+                <td><a href="/user/{{ element.id }}/delete">Delete</a></td>
+            {% endif %}
+        </tr>
+    </div>
+    {% else %}
+    <div>   
+        <tr>
+            <td>{{ element.id }}</td>
+            <td>{{ element.username }}</td>
+            <td>{{ element.access }}</td>
+            <td>{{ element.description }}</td>
+        </tr>
+    </div>
+    {% endif %}
+</form>
+{% endfor %}
+
+<script>
+    $(document).ready(function () {
+        $("#form_newuser" ).submit(function( event ) {
+            sendNewUserForm("form_newuser", "msg_newuser");
+        event.preventDefault();
+        });
+    });
+
+    /* send form via ajax */
+    function sendNewUserForm(form_ajax, msg) {
+        var form = $("#" + form_ajax);      // get form by id
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function (response) {  // response from server
+                var json = jQuery.parseJSON(response);
+                $('#' + msg).html(json.msg);    // Output data to div with id=msg
+                if (json.success == 'true') {
+                    form.trigger('reset');      // clear form
+                    window.location.href = "user";
+                }
+                else
+                {
+                    console.log("Error");
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+</script>
+
+{% endblock %}
