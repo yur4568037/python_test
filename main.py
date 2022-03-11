@@ -1,8 +1,10 @@
+import asyncio
+import aiohttp
+from operator import itemgetter
 import os.path
 import json
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import true
 from forms import SignInForm, NewUserForm, EditUserForm
 
 app = Flask(__name__)
@@ -17,6 +19,15 @@ id_global = 0
 access_to_site = False
 user_permission = 2
 
+data1_F = False
+data2_F = False
+data3_F = False
+
+data1 = []
+data2 = []
+data3 = []
+
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     username = db.Column(db.String(20), nullable=False)
@@ -29,26 +40,207 @@ class Users(db.Model):
         return '<Users %r>' % self.username
 
 
-# first create database
+class MyData(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(50))
+
+    # Format output
+    def __repr__(self):
+        return '<MyData %r>' % self.username
+
+
+
+
+
+# first create users database
 if os.path.isfile("users.db") == False:
     db.create_all()
     newuser = Users(id = 0, username = "admin", access = 1, userpass = "admin")
+    newdata = MyData(id = 0, name = "No data")
 
     try:
         db.session.add(newuser)
+        db.session.add(newdata)
         db.session.commit()
-        print("Admin created")
+        print("Tables created")
     except:
-        print("Error admin created")
+        print("Error tables created")
 
     print("Database created")
 else:
     # set last id_global and increment
     sql_users = Users.query.order_by(Users.id).all()
-    id_global = sql_users[-1].id
-    id_global += 1
+    try:
+        id_global = sql_users[-1].id
+        id_global += 1
+    except:
+        id_global = 0
+    
     print("Database exist")
 
+
+# Data point handlers=================================================
+@app.route('/database/point1', methods=['GET'])
+def data_point1():
+
+    try:
+        with open('data_source1.json') as f1:
+            data1 = json.load(f1)    
+    except:
+        return('error')
+        
+    data1_new = []
+
+    for el in data1:
+        if 'id' and 'name' in el:            # check dict
+            if type(el.get('id')) == int:    # check id type
+                data1_new.append(el)    
+
+    return json.dumps(data1_new)
+
+
+@app.route('/database/point2', methods=['GET'])
+def data_point2():
+    
+    try:
+        with open('data_source2.json') as f2:
+            data2 = json.load(f2)    
+    except:
+        return('error')
+        
+    data2_new = []
+
+    for el in data2:
+        if 'id' and 'name' in el:            # check dict
+            if type(el.get('id')) == int:    # check id type
+                data2_new.append(el)    
+
+    return json.dumps(data2_new)
+
+
+@app.route('/database/point3', methods=['GET'])
+def data_point3():
+    
+    try:
+        with open('data_source3.json') as f3:
+            data3 = json.load(f3)    
+    except:
+        return('error')
+        
+    data3_new = []
+
+    for el in data3:
+        if 'id' and 'name' in el:            # check dict
+            if type(el.get('id')) == int:    # check id type
+                data3_new.append(el)    
+
+    return json.dumps(data3_new)
+
+
+# function for async requests======================================
+async def fetch_point(url, id):
+    async with aiohttp.ClientSession() as session:
+        # debug
+        if id == 1:
+            await asyncio.sleep(0)
+        if id == 2:
+            await asyncio.sleep(0)
+        if id == 3:
+            await asyncio.sleep(0)
+        #debug
+        
+        global data1_F
+        global data2_F
+        global data3_F
+        global data1
+        global data2
+        global data3
+
+        try:
+            async with session.get(url) as response:
+                data = await response.read()
+                if id == 1:
+                    data1_F = True
+                    data1 = json.loads(data)
+                if id == 2:
+                    data2_F = True
+                    data2 = json.loads(data)
+                if id == 3:
+                    data3_F = True
+                    data3 = json.loads(data)
+        except:
+            print('error http request')
+
+
+async def fetch_process():
+    futures = [asyncio.create_task(fetch_point('http://127.0.0.1:5000/database/point1', 1)), asyncio.create_task(fetch_point('http://127.0.0.1:5000/database/point2', 2)),
+    asyncio.create_task(fetch_point('http://127.0.0.1:5000/database/point3', 3))]
+
+    done, pending = await asyncio.wait(futures, timeout=2)
+
+    for future in pending:
+        future.cancel()
+        print('pending ' + future.get_name())
+    
+    for future in done:
+        print('done ' + future.get_name())
+
+
+# HTTP handlers==========================================
+@app.route('/database', methods=['POST', 'GET'])
+def page_database():
+    if request.method == "POST":
+        
+        # start async request JSON (non-async in the beginning)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(fetch_process())
+        loop.close()
+        
+        global data1_F
+        global data2_F
+        global data3_F
+        global data1
+        global data2
+        global data3
+
+        data_all = []
+
+        if data1_F == True:
+            data1_F = False
+            data_all += data1
+        if data2_F == True:
+            data2_F = False
+            data_all += data2
+        if data3_F == True:
+            data3_F = False
+            data_all += data3
+
+        sorted_data = sorted(data_all, key=itemgetter('id'))
+
+        sql_database = MyData.query.order_by(MyData.id).all()
+
+        for el in sql_database:
+            db.session.delete(el)
+        #db.drop_all()
+        #db.create_all()
+        db.session.commit()
+        
+        for el in sorted_data:
+            newdata = MyData(id = el.get('id'), name = el.get('name'))
+            try:
+                db.session.add(newdata)
+                db.session.commit()
+            except:
+                print("Error db commit")
+
+        #print(sorted_data)
+        
+        return redirect('/database')
+
+    else:
+        sql_database = MyData.query.order_by(MyData.id).all()
+        return render_template("database.html", sql_database=sql_database)
 
 
 @app.errorhandler(404)

@@ -8,7 +8,7 @@ class SignInForm(FlaskForm):
 
 class NewUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
-    access = IntegerField('Access', validators=[DataRequired()])
+    access = IntegerField('Access (1 - admin or 2 - user)', validators=[DataRequired()])
     #description = StringField('Description', validators=[DataRequired()])
     #description = TextAreaField('Description', validators=[Length(max=200)])
     description = TextAreaField('Description')

@@ -25,7 +25,7 @@ If the system does not allow script execution, then you need to run Powershell a
 6. Navigate to [http://localhost:5000](http://localhost:5000)
 
 ### Description
-The project has two pages: Main page and Users page. You must be logged in to access the site.
+The project has three pages: Main page, Users page and Database. You must be logged in to access the site.
 At the first start, admin is automatically created:
 Login: admin
 Password: admin
@@ -35,5 +35,6 @@ You cannot remove the admin and you cannot change the admin access level, but yo
 Access level:
 1 - admin
 2 - user
-
 Any user can log out of a session by clicking the SignOut button.
+
+The Database page displays information received from three HTTP data points (processed by the same program). When you click on the Request button, the server initiates a one-time asynchronous polling of data points. The received information is sorted by id and displayed on the screen.

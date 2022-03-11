@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Main title
+{% endblock %}
+
+{% block body %}
+<h1  class="mt-5">Remote server data:</h1>
+
+<form method="post">
+    <input type="submit" value="Request">
+</form>
+<br>
+
+{% for element in sql_database %}
+<div>   
+    <tr>
+        <td>{{ element.id.label }}</td> <td>{{ element.id }}</td>
+        <td>{{ element.name.label }}</td> <td>{{ element.name }}</td>
+    </tr>
+</div>
+{% endfor %}
+
+
+
+{% endblock %}
