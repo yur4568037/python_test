@@ -159,7 +159,7 @@ async def fetch_point(url, id):
         try:
             async with session.get(url) as response:
                 data = await response.read()
-                if id == 1:
+                if id == 1 and data != 'error':
                     data1_F = True
                     data1 = json.loads(data)
                 if id == 2:
@@ -169,6 +169,12 @@ async def fetch_point(url, id):
                     data3_F = True
                     data3 = json.loads(data)
         except:
+            if id == 1:
+                data1_F = False
+            if id == 2:
+                data2_F = False
+            if id == 3:
+                data3_F = False
             print('error http request')
 
 
@@ -222,8 +228,6 @@ def page_database():
 
         for el in sql_database:
             db.session.delete(el)
-        #db.drop_all()
-        #db.create_all()
         db.session.commit()
         
         for el in sorted_data:
@@ -233,8 +237,6 @@ def page_database():
                 db.session.commit()
             except:
                 print("Error db commit")
-
-        #print(sorted_data)
         
         return redirect('/database')
 
