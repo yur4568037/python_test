@@ -195,6 +195,10 @@ async def fetch_process():
 # HTTP handlers==========================================
 @app.route('/database', methods=['POST', 'GET'])
 def page_database():
+    global access_to_site
+    if access_to_site == False:
+        return redirect('/signin')
+        
     if request.method == "POST":
         
         # start async request JSON (non-async in the beginning)
@@ -228,15 +232,17 @@ def page_database():
 
         for el in sql_database:
             db.session.delete(el)
+            
         db.session.commit()
         
         for el in sorted_data:
             newdata = MyData(id = el.get('id'), name = el.get('name'))
-            try:
-                db.session.add(newdata)
-                db.session.commit()
-            except:
-                print("Error db commit")
+            db.session.add(newdata)
+        
+        try:
+            db.session.commit()
+        except:
+            print("Error db commit")
         
         return redirect('/database')
 
